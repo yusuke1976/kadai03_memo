@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>ノートアプリ</title>
+    <script src="js/jquery-2.1.3.min.js"></script>
+    <link rel="stylesheet" href="css/sample2.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>ノートアプリ</h1>
+    </header>
+
+    <main style="display:none;">
+        <div class="container">
+            <button onclick="createNote()" id="btn">新しいノートを作成</button>
+            <div id="notes-container"></div>
+        </div>
+        
+    </main>
+
+    <footer>Micchan's Notes</footer>
+    <script>
+        $("main").slideDown(500);
+
+        let notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+        function createNote() {
+            let newNote = { title: 'タイトル：', content: 'コンテンツ：', photo: null };
+            notes.push(newNote);
+            saveNotes();
+            renderNotes();
+        }
+
+        function saveNotes() {
+            localStorage.setItem("notes", JSON.stringify(notes));
+        }
+
+        function deleteNote(index) {
+            notes.splice(index, 1);
+            saveNotes();
+            renderNotes();
+        }
+
+        function renderNotes() {
+            let notesContainer = document.getElementById("notes-container");
+            notesContainer.innerHTML = '';
+            for (let i = 0; i < notes.length; i++) {
+                let note = notes[i];
+                let noteElement = document.createElement("div");
+                noteElement.className = "note";
+
+                let titleElement = document.createElement("div");
+                titleElement.className = "note-title";
+                titleElement.contentEditable = true;
+                titleElement.innerHTML = note.title;
+                titleElement.addEventListener("input", function() {
+                    note.title = this.innerHTML;
+                    saveNotes();
+                });
+                noteElement.appendChild(titleElement);
+
+                let contentElement = document.createElement("div");
+                contentElement.className = "note-content";
+                contentElement.contentEditable = true;
+                contentElement.innerHTML = note.content;
+                contentElement.addEventListener("input", function() {
+                    note.content = this.innerHTML;
+                    saveNotes();
+                });
+                noteElement.appendChild(contentElement);
+
+                if (note.photo) {
+                    let photoElement = document.createElement("img");
+                    photoElement.className = "note-photo";
+                    photoElement.src = note.photo;
+                    noteElement.appendChild(photoElement);
+
+                    let deletePhotoButton = document.createElement("button");
+                    deletePhotoButton.className = "button";
+                    deletePhotoButton.textContent = "写真を削除";
+                    deletePhotoButton.addEventListener("click", function() {
+                        note.photo = null;
+                        saveNotes();
+                        renderNotes();
+                    });
+                    noteElement.appendChild(deletePhotoButton);
+                }
+                
+                let uploadPhotoButton = document.createElement("input");
+                uploadPhotoButton.type = "file";
+                uploadPhotoButton.accept = "image/*";
+                uploadPhotoButton.id = "upload-input-" + i;  // idを付ける
+
+                let uploadButtonLabel = document.createElement("label");
+                uploadButtonLabel.className = "upload-btn";
+                uploadButtonLabel.htmlFor = "upload-input-" + i;  // labelとinputを関連付ける
+                uploadButtonLabel.textContent = "写真をアップロード";
+
+                uploadPhotoButton.addEventListener("change", function() {
+                    let file = this.files[0];
+                    if (file) {
+                        let reader = new FileReader();
+                        reader.onload = function() {
+                            note.photo = reader.result;
+                            saveNotes();
+                            renderNotes();
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                noteElement.appendChild(uploadButtonLabel);  // labelを追加
+                noteElement.appendChild(uploadPhotoButton);
+               
+//                let uploadPhotoButton = document.createElement("input");
+//                uploadPhotoButton.type = "file";
+//                uploadPhotoButton.accept = "image/*";
+//                uploadPhotoButton.value = "";//追加したけどうまくいかず！！
+//                uploadPhotoButton.addEventListener("change", function() {
+//                    let file = this.files[0];
+//                    if (file) {
+//                        let reader = new FileReader();
+//                        reader.onload = function() {
+//                            note.photo = reader.result;
+//                            saveNotes();
+//                            renderNotes();
+//                        }
+//                        reader.readAsDataURL(file);
+//                    }
+//                });
+//                noteElement.appendChild(uploadPhotoButton);
+
+                let deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-note';
+                deleteButton.innerHTML = 'ノートを削除';
+                deleteButton.addEventListener('click', function() {
+                    deleteNote(i);
+                });
+                noteElement.appendChild(deleteButton);
+
+                notesContainer.appendChild(noteElement);
+            }
+        }
+
+        renderNotes();
+        
+    </script>
+</body>
+
+</html>
